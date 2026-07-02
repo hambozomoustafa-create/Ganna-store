@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>📊 Ganna's system</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        .page { display: none; }
+        .active { display: block; }
+        .menu-grid { display: flex; gap: 20px; margin-top: 30px; }
+        .nav-card {
+            flex: 1; padding: 25px; text-align: center; background: #ecf0f1;
+            border-radius: 8px; cursor: pointer; transition: all 0.3s ease;
+            font-size: 18px; font-weight: bold; color: #2c3e50; border-left: 10px solid #3498db;
+        }
+        .nav-card:hover { background: #3498db; color: white; transform: translateY(-3px); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #2ecc71; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #27ae60; }
+        .btn-secondary { background-color: #7f8c8d; }
+        .btn-secondary:hover { background-color: #95a5a6; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: right; }
+        th { background-color: #34495e; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .action-btns button { padding: 5px 10px; font-size: 12px; margin-left: 5px; }
+        .btn-sell { background-color: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-sell:hover { background-color: #c0392b; }
+        .btn-buy { background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-buy:hover { background-color: #2980b9; }
+        .alert-low { color: #c0392b; font-weight: bold; background-color: #fce4d6; padding: 2px 5px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div id="home-page" class="page active">
+        <h2>Ganna's system</h2>
+        <p>Welcome! better for you</p>
+
+        <div class="menu-grid">
+            <div class="nav-card" onclick="showPage('add-page')">
+                ➕ إضافة زيت عطر جديد <br>
+                <span style="font-size: 12px; font-weight: normal; color: #7f8c8d;">لتسجيل ملف جديد لأول مرة</span>
+            </div>
+            <div class="nav-card" onclick="showPage('table-page')">
+                📊 جدول الجرد والمبيعات <br>
+                <span style="font-size: 12px; font-weight: normal; color: #7f8c8d;">لمتابعة الأوزان والخصم والتزويد</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-page" class="page">
+        <h2>➕ إضافة ملف زيت جديد للمخزن</h2>
+        
+        <div class="form-group">
+            <label for="new-oil-name">اسم الزيت العطري:</label>
+            <input type="text" id="new-oil-name" placeholder="...مثال: سوفاج، بلو شانيل">
+        </div>
+        
+        <div class="form-group">
+            <label for="new-oil-code">كود الصنف:</label>
+            <input type="text" id="new-oil-code" placeholder="مثال: 001">
+        </div>
+        
+        <div class="form-group">
+            <label for="new-oil-weight">الوزن الافتتاحي الحالي:</label>
+            <select id="new-oil-weight">
+                <option value="125">ثمن كيلو (125 جرام)</option>
+                <option value="250">ربع كيلو (250 جرام)</option>
+                <option value="500">نصف كيلو (500 جرام)</option>
+                <option value="1000">كيلو كامل (1000 جرام)</option>
+            </select>
+        </div>
+        
+        <button onclick="addNewOilToInventory()">حفظ الزيت في المخزن</button>
+        <button class="btn-secondary" onclick="showPage('home-page')">رجوع للرئيسية</button>
+    </div>
+
+    <div id="table-page" class="page">
+        <h2>📊 جدول كميات المخزن والجرد الحالي</h2>
+        <p>يمكنك الخصم (بيع) أو التزويد مباشرة من الأزرار</p>
+        
+        <div class="form-group" style="margin-top: 20px; margin-bottom: 15px;">
+            <input type="text" id="searchBar" onkeyup="searchByCode()" placeholder="🔍 اكتب رقم كود الصنف للبحث الفوري المباشر...">
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>الكود</th>
+                    <th>اسم الزيت</th>
+                    <th>الوزن المتبقي</th>
+                    <th>سحب وبيع (بالجرام)</th>
+                    <th>شراء وتزويد (بالكسور)</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="oils-table-body">
+                </tbody>
+        </table>
+        <br>
+        <button class="btn-secondary" onclick="showPage('home-page')">رجوع للرئيسية</button>
+    </div>
+
+</div>
+
+<script>
+let oilInventory = [];
+
+function loadData() {
+    const localData = localStorage.getItem('perfume_inventory_data');
+    if (localData) {
+        oilInventory = JSON.parse(localData);
+    } else {
+        oilInventory = [
+            { id: "1", code: "001", name: "سوفاج", current_weight: 500 },
+            { id: "2", code: "002", name: "بلو شانيل", current_weight: 125 }
+        ];
+        saveData();
+    }
+}
+
+function saveData() {
+    localStorage.setItem('perfume_inventory_data', JSON.stringify(oilInventory));
+}
+
+function showPage(pageId) {
+    document.getElementById('home-page').classList.remove('active');
+    document.getElementById('add-page').classList.remove('active');
+    document.getElementById('table-page').classList.remove('active');
+    
+    document.getElementById(pageId).classList.add('active');
+    if (pageId === 'table-page') {
+        document.getElementById('searchBar').value = '';
+        renderTable(oilInventory);
+    }
+}
+
+function addNewOilToInventory() {
+    let nameInput = document.getElementById("new-oil-name").value.trim();
+    let codeInput = document.getElementById("new-oil-code").value.trim();
+    let weightInput = parseInt(document.getElementById("new-oil-weight").value);
+
+    if (nameInput === "" || codeInput === "") {
+        alert("من فضلك املأ اسم الزيت والكود أولاً!");
+        return;
+    }
+
+    let existingOil = oilInventory.find(oil => oil.code === codeInput);
+
+    if (existingOil) {
+        existingOil.current_weight += weightInput;
+    } else {
+        let newOil = {
+            id: String(Date.now()), // حفظ الـ ID كنص صريح لتفادي مشاكل الأرقام الكبيرة
+            code: codeInput,
+            name: nameInput,
+            current_weight: weightInput
+        };
+        oilInventory.push(newOil);
+    }
+
+    saveData();
+    
+    document.getElementById("new-oil-name").value = "";
+    document.getElementById("new-oil-code").value = "";
+    
+    showPage('table-page');
+}
+
+function addStock(oilId, fraction) {
+    let oil = oilInventory.find(o => String(o.id) === String(oilId));
+    if (!oil) return;
+    
+    let weightToAdd = fraction === 'ثمن' ? 125 : fraction === 'ربع' ? 250 : fraction === 'نص' ? 500 : 1000;
+    oil.current_weight += weightToAdd;
+    saveData();
+    searchByCode(); // لتحديث الجدول فوراً مع الحفاظ على نتيجة البحث
+}
+
+function sellPerfume(oilId, gramsUsed) {
+    let oil = oilInventory.find(o => String(o.id) === String(oilId));
+    if (!oil) return;
+    
+    if (oil.current_weight >= gramsUsed) {
+        oil.current_weight -= gramsUsed;
+        saveData();
+        searchByCode(); // لتحديث الجدول فوراً مع الحفاظ على نتيجة البحث
+    } else {
+        alert(`عذراً، المخزن لا يكفي! المتاح هو (${oil.current_weight}) جرام`);
+    }
+}
+
+function deleteOil(oilId) {
+    if (confirm("هل أنت متأكد من رغبتك في حذف هذا الصنف تماماً من المخزن؟")) {
+        oilInventory = oilInventory.filter(o => String(o.id) !== String(oilId));
+        saveData();
+        searchByCode(); // لتحديث الجدول فوراً مع الحفاظ على نتيجة البحث
+    }
+}
+
+function searchByCode() {
+    let searchValue = document.getElementById('searchBar').value.trim().toLowerCase();
+    let filteredInventory = oilInventory.filter(oil => {
+        return oil.code.toLowerCase().includes(searchValue);
+    });
+    renderTable(filteredInventory);
+}
+
+function renderTable(inventoryToShow) {
+    let tableBody = document.getElementById("oils-table-body");
+    tableBody.innerHTML = "";
+    
+    if (inventoryToShow.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;">لا توجد أصناف مطابقة لبحثك!</td></tr>`;
+        return;
+    }
+    
+    inventoryToShow.forEach(oil => {
+        let weightStyle = oil.current_weight < 125 ? "class='alert-low'" : "";
+        
+        // تم إحاطة الدالة بـ علامات تنصيص مفردة لتمرير الـ id كـ نص سليم دون مشاكل الاستجابة
+        tableBody.innerHTML += `
+            <tr>
+                <td>${oil.code}</td>
+                <td><b>${oil.name}</b></td>
+                <td ${weightStyle}>${oil.current_weight} جرام</td>
+                <td class="action-btns">
+                    <button class="btn-sell" onclick="sellPerfume('${oil.id}', 125)">ثمن</button>
+                    <button class="btn-sell" onclick="sellPerfume('${oil.id}', 250)">ربع</button>
+                    <button class="btn-sell" onclick="sellPerfume('${oil.id}', 500)">نص</button>
+                </td>
+                <td class="action-btns">
+                    <button class="btn-buy" onclick="addStock('${oil.id}', 'ثمن')">+ ثمن</button>
+                    <button class="btn-buy" onclick="addStock('${oil.id}', 'ربع')">+ ربع</button>
+                    <button class="btn-buy" onclick="addStock('${oil.id}', 'نص')">+ نص</button>
+                </td>
+                <td>
+                    <button class="btn-sell" style="background-color: #d9534f; border-color: #d43f3a;" onclick="deleteOil('${oil.id}')">🗑️ حذف</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+loadData();
+</script>
+
+</body>
+</html>
